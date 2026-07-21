@@ -1,0 +1,45 @@
+{
+  "provenance": {
+    "source_url": "https://slaythespire.wiki.gg/wiki/Slay_the_Spire_2:Cards_List",
+    "retrieved_at": "2026-07-16",
+    "game_version": "unknown",
+    "review_status": "AI scaffold checked against individual wiki card pages; owner review pending"
+  },
+  "observation": {
+    "character": "ironclad",
+    "current_hp": 52,
+    "max_hp": 80,
+    "deck_summary": {
+      "attack_cards": 6,
+      "skill_cards": 4,
+      "cards_containing_strike": 5
+    },
+    "offered_cards": [
+      {
+        "id": "pommel_strike",
+        "name": "Pommel Strike",
+        "type": "attack",
+        "rarity": "common",
+        "cost": 1,
+        "rules": "Deal 9 damage. Draw 1 card."
+      },
+      {
+        "id": "shrug_it_off",
+        "name": "Shrug It Off",
+        "type": "skill",
+        "rarity": "common",
+        "cost": 1,
+        "rules": "Gain 8 Block. Draw 1 card."
+      },
+      {
+        "id": "iron_wave",
+        "name": "Iron Wave",
+        "type": "attack",
+        "rarity": "common",
+        "cost": 1,
+        "rules": "Gain 5 Block. Deal 5 damage."
+      }
+    ],
+    "can_skip": true
+  }
+}

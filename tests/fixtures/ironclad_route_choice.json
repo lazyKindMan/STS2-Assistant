@@ -1,0 +1,48 @@
+{
+  "provenance": {
+    "source_url": null,
+    "retrieved_at": "2026-07-21",
+    "game_version": "unknown",
+    "review_status": "synthetic manual map snapshot for the Phase 2A learning test"
+  },
+  "game_state": {
+    "character": "ironclad",
+    "current_hp": 52,
+    "max_hp": 80,
+    "act": 1,
+    "current_node_id": "start",
+    "nodes": [
+      {
+        "id": "start",
+        "type": "current",
+        "floor": 0,
+        "outgoing_node_ids": [
+          "elite_1",
+          "shop_1"
+        ]
+      },
+      {
+        "id": "elite_1",
+        "type": "elite",
+        "floor": 1,
+        "outgoing_node_ids": [
+          "rest_2"
+        ]
+      },
+      {
+        "id": "shop_1",
+        "type": "shop",
+        "floor": 1,
+        "outgoing_node_ids": [
+          "rest_2"
+        ]
+      },
+      {
+        "id": "rest_2",
+        "type": "rest",
+        "floor": 2,
+        "outgoing_node_ids": []
+      }
+    ]
+  }
+}
