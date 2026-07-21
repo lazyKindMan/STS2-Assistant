@@ -95,6 +95,10 @@ class LiveDecisionTest(unittest.TestCase):
 
         self.assertEqual(2, len(responses.requests))
         self.assertEqual(
+            ["get_card_facts"],
+            [tool["name"] for tool in responses.requests[0]["tools"]],
+        )
+        self.assertEqual(
             ["observation", "tool_call", "tool_result", "final"],
             [event["type"] for event in result["trace"]],
         )

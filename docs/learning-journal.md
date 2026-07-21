@@ -8,14 +8,14 @@ Scores measure progress against the current milestone. They do not measure perso
 
 ## Current status
 
-- Current milestone: Accelerated Module 1 — end-to-end route decision
-- Status: ready
-- Workflow state: `READY`
-- Active iteration: compose one complete route vertical slice with fake and real provider boundaries
-- Next expected input: `开始本轮`
-- Primary concept focus: vertical Agent composition (supported by task-specific tool contract and final-action safety)
-- Human-owned core: `build_route_turn_contract`
-- Latest score: 18/20 (Phase 2A)
+- Current milestone: Accelerated Module 2 — unified card/route Agent Runtime
+- Status: assessed
+- Workflow state: `DONE`
+- Active iteration: Accelerated Module 2 complete — card and route entry points inject task contracts into one task-agnostic Runtime
+- Next expected input: `下一轮`
+- Primary concept focus: runtime task assembly (supported by inversion of control and task isolation)
+- Human-owned core: `run_decision`
+- Latest score: 18/20 (Accelerated Module 2)
 
 ## Accelerated curriculum pivot — 2026-07-21
 
@@ -85,6 +85,111 @@ Score each dimension from 0 to 4, for a total out of 20:
 Do not score deliberately deferred capabilities. Identify which evidence came from owner-written work and which came from AI scaffolding.
 
 ## Learning entries
+
+### 2026-07-21 — Accelerated Module 2: unified card/route Agent Runtime
+
+- Primary concept: runtime task assembly
+- Supporting concepts: inversion of control and task isolation
+- Human-owned code: `run_decision`, which consumes an injected `TurnContract`,
+  creates the provider adapter, starts a typed observation-event context, runs
+  the provider-neutral Agent loop, applies the injected final validator, and
+  returns the validated decision plus trace without knowing the task type
+- AI-supported work: introduced the `TurnContract` dataclass, extracted the
+  concrete card contract, migrated card and route entry points into thin
+  wrappers, created the generic Runtime test, added provider-tool isolation
+  evidence, strengthened the validator-return assertion, executed tests, and
+  ran the live OpenAI route smoke test
+- Deterministic evidence: all fourteen project tests passed; one generic
+  `inspect_option` contract completed without card/route knowledge, the
+  validator's normalized return value reached the caller, existing card and
+  route traces remained unchanged, and each provider request exposed only its
+  task's tool schema
+- Live evidence: through the shared Runtime, GPT-5.6-sol called
+  `inspect_route_path("shop_1")`, consumed the downstream `rest_2` result, and
+  returned the reachable `shop_1` choice; no external game action ran
+
+| Dimension | Score (0-4) | Evidence |
+| --- | ---: | --- |
+| Conceptual understanding | 3 | Owner chose contract injection over task branching and located current task selection at the entry-point boundary; the distinction between an already selected entry point and a future state-classifying dispatcher required clarification. |
+| Behavioral correctness | 4 | Final owner code performs all five Runtime transitions, passes generic/card/route behavior and safety tests, and supports a real provider call without task-specific branches. |
+| Evaluation discipline | 4 | Fourteen deterministic tests cover the generic transition, normalized validator return, card/route tool isolation, existing safety gates, and trace regressions; a source scan found no task identifiers in Runtime, and a live route run verified provider integration. |
+| Scope and simplicity | 4 | One dataclass and one direct Runtime function replaced duplicated assembly; no registry, framework, dependency, retry, memory, or dispatcher was added. |
+| Ownership and explanation | 3 | Owner implemented the central Runtime and architecture choice, but initially supplied a raw observation instead of an event and discarded the validator's returned decision, then corrected both from contract-level evidence. |
+
+- Total: 18/20
+- Demonstrated strength: used inversion of control so task-owned prompt, tool
+  schema, executable capabilities, and final validation enter a stable Runtime
+  without adding `if card/route` to either the Runtime or Agent loop.
+- Concept gap or uncertainty: an entry point is already task-specific; it does
+  not classify the task. A future application dispatcher will inspect fresh
+  environment state and select an entry point/contract, while the Runtime only
+  executes the supplied contract. Also, a validator's returned value is part of
+  its contract and may differ from its input.
+- Reference reflection: task builders own business differences and bind them to
+  current state; `TurnContract` transports those capabilities; `run_decision`
+  owns common provider/loop/final-validation assembly; `run_agent_turn` owns
+  model/tool transitions; and the provider adapter owns OpenAI correlation.
+  Deterministic tests prove covered task isolation and transitions, while the
+  live call proves the refactored route path reaches OpenAI. They do not prove
+  strategy quality, stale-state replacement, retries, or safe game execution.
+- Next module: make observation, Agent-turn events, provider correlation, and
+  optional session intent explicit through a bounded context policy and context
+  manifest.
+- What would raise the target score by one point: explain the difference
+  between task classification, contract construction, Runtime execution, and
+  Agent-loop transition without prompting, including why validator output must
+  replace the raw final decision.
+
+### 2026-07-21 — Accelerated Module 1: end-to-end route decision
+
+- Primary concept: vertical Agent composition
+- Supporting concepts: task-specific tool contract and final-action safety
+- Human-owned code: `build_route_turn_contract`, which assembled route
+  instructions, provider tool schema, structured final-output schema, guarded
+  executable tools, and the current-observation final validator into one
+  explicit concrete contract
+- AI-supported work: parameterized the OpenAI adapter, preserved the card
+  caller, implemented the read-only route inspection tool and repetitive
+  validators, built the fake/real route entry point, supplied three acceptance
+  tests, removed the leftover scaffold line, ran tests, and performed the live
+  OpenAI smoke run
+- Deterministic evidence: all thirteen project tests passed; the route suite
+  produced `observation -> tool_call -> tool_result -> final`, exposed only
+  `inspect_route_path` and the `route_decision` format, rejected `rest_2` before
+  tool execution, and rejected `rest_2` as an unreachable final choice
+- Live evidence: GPT-5.6-sol called `inspect_route_path("elite_1")`, consumed a
+  result showing downstream `rest_2`, and returned the legal `elite_1` choice
+  with a reason; no game movement was executed
+
+| Dimension | Score (0-4) | Evidence |
+| --- | ---: | --- |
+| Conceptual understanding | 3 | Owner selected injected task configuration instead of duplicating the OpenAI adapter and correctly assigned the route tool schema to the route contract; initially conflated structural `text_format` with runtime semantic validation. |
+| Behavioral correctness | 4 | The owner-authored five-slot contract passed the fake end-to-end route turn, both safety failures, all card regressions, and the real provider run on the first implementation attempt. |
+| Evaluation discipline | 4 | Deterministic evidence covered the success trace, provider-visible tool/schema isolation, pre-execution unreachable-tool rejection, post-model unreachable-final rejection, and thirteen regressions; the live run separately demonstrated provider integration. |
+| Scope and simplicity | 4 | One concrete route vertical slice reused the existing loop and normalizer, parameterized only card-specific provider inputs, added no dependency, and did not execute the game. |
+| Ownership and explanation | 4 | Owner made the central adapter-versus-contract architecture choice and accurately assembled all five task-owned components without rewriting provider or loop mechanics. |
+
+- Total: 19/20
+- Demonstrated strength: separated task-owned declarative schemas, guarded
+  executable capabilities, and dynamic final validation from provider protocol
+  handling and the generic Agent transition loop.
+- Concept gap or uncertainty: `text_format` constrains the structural shape of
+  model output, while `validate_decision` checks dynamic semantics against the
+  latest observation; a schema alone cannot prove that a node is reachable.
+- Reference reflection: the manual state becomes a bounded route observation;
+  the concrete contract supplies only route instructions and capabilities; the
+  provider adapter owns OpenAI request/correlation details; `run_agent_turn`
+  owns model/tool transitions; the guarded tool validates before execution;
+  and the bound final validator checks the returned choice before it leaves the
+  application. The fake tests prove covered protocol and safety behavior, and
+  the live call proves real provider compatibility. Neither proves that
+  `elite_1` is strategically optimal or that an external game action is safe.
+- Next module: extract the now-concrete card and route contracts into one
+  unified runtime so task selection changes configuration rather than the
+  Agent loop.
+- What would raise the target score by one point: explain without prompting why
+  JSON Schema validates output structure but fresh-observation validation owns
+  dynamic action legality.
 
 ### 2026-07-21 — Phase 2A: route observation and legal actions
 

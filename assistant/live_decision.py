@@ -4,9 +4,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from assistant.agent_loop import run_agent_turn
 from assistant.card_tools import get_card_facts
-from assistant.openai_model import OpenAIResponsesModel, build_system_instructions
+from assistant.openai_model import (
+    CARD_TOOL_SPEC,
+    DECISION_TEXT_FORMAT,
+    build_system_instructions,
+)
+from assistant.runtime import TurnContract, run_decision
 
 FIXTURE_PATH = (
     Path(__file__).parent.parent
@@ -50,15 +54,37 @@ def validate_tool_request(
     return arguments
 
 
+def build_card_turn_contract(
+    observation: dict[str, Any],
+    catalog: dict[str, dict[str, Any]],
+) -> TurnContract:
+    """Bind card instructions, capabilities, and guards to current state."""
+
+    def guarded_get_card_facts(card_id: str) -> dict[str, Any]:
+        arguments = validate_tool_request(
+            observation,
+            "get_card_facts",
+            {"card_id": card_id},
+        )
+        return get_card_facts(arguments["card_id"], catalog)
+
+    def validate_final(decision: dict[str, Any]) -> dict[str, Any]:
+        return validate_card_decision(observation, decision)
+
+    return TurnContract(
+        instructions=build_system_instructions(),
+        tool_specs=[CARD_TOOL_SPEC],
+        text_format=DECISION_TEXT_FORMAT,
+        tools={"get_card_facts": guarded_get_card_facts},
+        validate_decision=validate_final,
+    )
+
+
 def run_live_decision(
     client: Any,
     fixture_path: Path = FIXTURE_PATH,
 ) -> dict[str, Any]:
-    """Compose the observation, tools, model adapter, and Agent loop.
-
-    Return the provider-neutral result containing ``decision`` and ``trace``.
-    This composition function is the human-owned core of Phase 1A.
-    """
+    """Build current card state and delegate to the shared Agent Runtime."""
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
     source = fixture["observation"]
     catalog = {
@@ -70,31 +96,8 @@ def run_live_decision(
         "can_skip": source["can_skip"],
         "deck_summary": source["deck_summary"],
     }
-    context = [
-        {
-            "type": "observation",
-            "content": observation,
-        }
-    ]
-    model = OpenAIResponsesModel(
-        client=client,
-        instructions=build_system_instructions(),
-    )
-
-    def guarded_get_card_facts(card_id: str) -> dict[str, Any]:
-        arguments = validate_tool_request(
-            observation,
-            "get_card_facts",
-            {"card_id": card_id},
-        )
-        return get_card_facts(arguments["card_id"], catalog)
-
-    tools = {
-        "get_card_facts": guarded_get_card_facts,
-    }
-    result = run_agent_turn(context, model, tools)
-    result["decision"] = validate_card_decision(observation, result["decision"])
-    return result
+    contract = build_card_turn_contract(observation, catalog)
+    return run_decision(client, observation, contract)
 
 
 def main() -> None:

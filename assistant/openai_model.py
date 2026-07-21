@@ -88,10 +88,14 @@ class OpenAIResponsesModel:
         self,
         client: Any,
         instructions: str,
+        tool_specs: list[dict[str, Any]],
+        text_format: dict[str, Any],
         model: str = DEFAULT_MODEL,
     ) -> None:
         self.client = client
         self.instructions = instructions
+        self.tool_specs = tool_specs
+        self.text_format = text_format
         self.model = model
         self.previous_response_id: Optional[str] = None
 
@@ -99,8 +103,8 @@ class OpenAIResponsesModel:
         request: dict[str, Any] = {
             "model": self.model,
             "instructions": self.instructions,
-            "tools": [CARD_TOOL_SPEC],
-            "text": DECISION_TEXT_FORMAT,
+            "tools": self.tool_specs,
+            "text": self.text_format,
             "reasoning": {"effort": "low"},
         }
 

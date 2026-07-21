@@ -6,6 +6,8 @@ from types import SimpleNamespace
 from assistant.agent_loop import run_agent_turn
 from assistant.card_tools import get_card_facts
 from assistant.openai_model import (
+    CARD_TOOL_SPEC,
+    DECISION_TEXT_FORMAT,
     DEFAULT_MODEL,
     OpenAIResponsesModel,
     build_system_instructions,
@@ -56,6 +58,8 @@ class OpenAIModelTest(unittest.TestCase):
         model = OpenAIResponsesModel(
             client=fake_client,
             instructions=build_system_instructions(),
+            tool_specs=[CARD_TOOL_SPEC],
+            text_format=DECISION_TEXT_FORMAT,
         )
         tools = {
             "get_card_facts": lambda card_id: get_card_facts(card_id, catalog)
