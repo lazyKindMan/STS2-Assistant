@@ -11,25 +11,31 @@ Prioritize, in order:
 
 ### Development boundaries
 
-- Implement one observable behavior per iteration.
-- Do not implement card selection and map routing in the same iteration.
-- Keep the default change within 3 production files, 2 test files, and 150 new non-test lines.
+- Deliver one runnable end-to-end capability per learning module. Related
+  internal behaviors may ship together when they form one vertical slice.
+- Do not introduce new card-selection and map-routing gameplay behavior in the
+  same module. A shared-runtime module may exercise already completed card and
+  route behaviors together.
+- Keep the default module within 5 production files, 3 test files, and 300 new
+  non-test lines.
 - Add no dependency unless the current behavior cannot reasonably be implemented without it.
 - Do not introduce abstractions before two concrete usages exist.
 - Prefer explicit code over frameworks, registries, dependency injection, or generic configuration.
-- Explain the Agent concept introduced by every iteration.
+- Explain the system-level Agent concept introduced by every module and show
+  where it sits in the complete runtime.
 - Preserve manual JSON or Python-object input until external game integration is explicitly requested.
 - Do not add multi-agent orchestration, RAG, vector databases, event buses, GUI, OCR, reinforcement learning, or game automation unless explicitly requested.
-- When a request exceeds these boundaries, split it into smaller independently testable increments.
+- Split a module only when the result cannot remain understandable and
+  independently testable as one vertical capability.
 
-### Iteration contract
+### Module contract
 
 Before implementation:
 
-1. State the single learning objective.
-2. State the single user-visible behavior.
-3. Give one input/output acceptance example.
-4. List the files expected to change.
+1. Show the relevant part of the system map and component ownership.
+2. State the primary learning objective and the end-to-end user-visible behavior.
+3. Give one input/output or trace acceptance example.
+4. List the files expected to change and the architecture-level human-owned core.
 
 After implementation:
 
@@ -37,20 +43,31 @@ After implementation:
 2. Run the smallest relevant test.
 3. Explain the important code in plain language.
 4. Identify what was deliberately not implemented.
-5. Offer at most two possible next increments.
+5. Offer at most two possible next modules.
 
 ## Human ownership and learning checkpoints
 
 The user must personally implement and understand part of every learning increment.
 
 - Before changing code, designate exactly one **human-owned core** and list the surrounding **AI-supported work**.
-- Default human-owned cores include decision policies, scoring rules, prompt design, tool-selection loops, state transitions, and evaluation logic.
-- AI-supported work may include source research, fixtures, function signatures, docstrings, failing acceptance tests, small scaffolds, test execution, explanations, and code review.
+- Prefer architecture-level human-owned cores: task/turn contracts, runtime
+  assembly, context-selection policies, state machines, bounded recovery, and
+  evaluation verdicts.
+- Do not reserve routine dict access, fixture loading, schema repetition,
+  mechanical wiring, or test-assertion syntax as the human-owned core unless
+  that mechanism is itself the current Agent concept.
+- AI-supported work may include source research, fixtures, schemas, provider
+  plumbing, repetitive validators, function signatures, docstrings, fake
+  clients, acceptance tests, test execution, explanations, and code review.
 - Do not implement, complete, or silently rewrite the human-owned core unless the user explicitly asks for its full implementation.
 - After preparing the contract, scaffold, and failing test, stop at a clearly labeled learning checkpoint and wait for the user's attempt.
-- When the user submits an attempt, review and diagnose it before editing. Preserve the user's structure and propose the smallest useful change instead of replacing the whole file.
+- When the user submits an attempt, review and diagnose it before editing.
+  Preserve the user's structure and report all currently visible blocking
+  issues together instead of forcing one-field review cycles.
 - Offer help progressively: conceptual question, targeted hint, pseudocode, partial snippet, then full solution only on explicit request.
-- Concept/design questions still require an owner answer before implementation.
+- Ask for an owner answer only when the concept/design question tests a
+  meaningful architectural choice; do not gate progress on obvious syntax or
+  fixture access.
   After verified code, do not require a separate owner-authored reflection;
   provide the reference reflection directly and assess explanation evidence
   already observed during concept, implementation, and review.
@@ -68,13 +85,17 @@ Learning checkpoint: <the exact point where AI stops and hands control to the us
 Treat the user's Agent-development learning as a first-class project outcome, equal to delivering working behavior.
 
 - Read `docs/learning-journal.md` before planning a learning iteration so guidance builds on prior concepts and feedback.
-- Teach at most one primary Agent concept and one supporting concept per iteration.
-- Introduce each primary concept with a plain-language definition, its role in this project, one common misconception, and one question the user should be able to answer.
-- Use a mentor loop: explain briefly, ask the user to predict or design, let the
-  user implement the human-owned core, review evidence, then provide an
+- Teach one primary system-level Agent concept and at most two supporting
+  concepts per module.
+- Introduce the primary concept with a plain-language definition, its place in
+  the full runtime, one common failure mode, and a design question only when
+  the answer materially changes the implementation.
+- Use a mentor loop: show the system map, establish the contract, let the user
+  implement the architecture-level core, review all evidence, then provide an
   AI-authored reference reflection.
 - Connect feedback to Agent concepts such as observation, state, action space, policy, planning, tool use, memory, evaluation, uncertainty, and safety boundaries instead of giving code-style feedback alone.
-- Do not score work before the user has submitted a meaningful attempt and the relevant test or behavior has been inspected.
+- Score only after the complete module behavior has been verified; do not score
+  intermediate scaffolding or mechanical corrections.
 - Score against the current milestone, not against a production-ready autonomous Agent. Do not penalize intentionally deferred features.
 - Support every score with evidence from the user's code, tests, explanation, or observed behavior. Clearly distinguish user-written work from AI-written scaffolding.
 - After a completed review, update `docs/learning-journal.md` with concepts practiced, evidence, scores, feedback, and the next exercise.
@@ -98,11 +119,11 @@ Before handling a workflow command, read `docs/learning-journal.md`, restore the
 
 Recognize these commands:
 
-- `开始本轮 [optional goal]`: start the next incomplete learning iteration, or resume it if one is active.
+- `开始本轮 [optional goal]`: start the next incomplete accelerated module, or resume it if one is active.
 - `提示 N`: provide help at level 1–4 using the existing hint ladder; do not advance the workflow.
 - `我写完了` or `我改完了`: inspect the current owner-authored attempt, run relevant tests, and review without silently replacing it.
 - `状态`: report the current milestone, workflow state, concept, human-owned core, evidence still needed, and next expected input.
-- `下一轮`: after assessment, propose at most two next exercises based on the journal.
+- `下一轮`: after assessment, propose at most two next modules based on the journal.
 - `选1` or `选2`: select the proposed exercise and immediately start its concept stage.
 - `暂停`: preserve the current state and stop without starting new work.
 
@@ -119,7 +140,7 @@ READY -> CONCEPT -> IMPLEMENT -> REVIEW -> REFLECT -> DONE
 - `READY`: wait for `开始本轮`.
 - `CONCEPT`: teach one concept and wait for the user's answer.
 - `IMPLEMENT`: scaffold and wait for the user's code.
-- `REVIEW`: inspect `我写完了` or `我改完了`; request the smallest correction or advance.
+- `REVIEW`: inspect `我写完了` or `我改完了`; report all visible blocking issues in one review, then request a correction or advance.
 - `REFLECT`: explain the completed behavior, boundaries, and evidence limits;
   then score and advance without waiting for an owner answer.
 - `DONE`: score, update the learning entry, and wait for `下一轮`.
@@ -128,9 +149,11 @@ Update only the current-status fields in `docs/learning-journal.md` on workflow 
 
 ## Superpowers usage
 
-- Use brainstorming to select one user story and one acceptance example, not to design the whole product.
-- Keep an implementation plan focused on the current slice and no longer than five steps.
-- Apply test-driven development to one behavior at a time.
+- Use brainstorming to select one vertical user story and one acceptance trace,
+  while keeping its place in the complete system visible.
+- Keep an implementation plan focused on the current module and no longer than five steps.
+- Apply test-driven development to the module's end-to-end behavior and its
+  most important safety boundary.
 - Use verification before declaring the slice complete.
 - Do not use subagent-driven development unless the user explicitly requests delegation.
 

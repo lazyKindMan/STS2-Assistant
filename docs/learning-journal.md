@@ -8,14 +8,35 @@ Scores measure progress against the current milestone. They do not measure perso
 
 ## Current status
 
-- Current milestone: Phase 2A — route observation and legal actions
-- Status: assessed
-- Workflow state: `DONE`
-- Active iteration: Phase 2A complete — expose full useful map topology separately from the nodes legal on the current step
-- Next expected input: `选1`（离线路线工具回合，推荐）或 `选2`（第二个地图状态评估用例）
-- Primary concept focus: observation boundary (supported by dynamic action space)
-- Human-owned core: `build_route_observation`
+- Current milestone: Accelerated Module 1 — end-to-end route decision
+- Status: ready
+- Workflow state: `READY`
+- Active iteration: compose one complete route vertical slice with fake and real provider boundaries
+- Next expected input: `开始本轮`
+- Primary concept focus: vertical Agent composition (supported by task-specific tool contract and final-action safety)
+- Human-owned core: `build_route_turn_contract`
 - Latest score: 18/20 (Phase 2A)
+
+## Accelerated curriculum pivot — 2026-07-21
+
+- Owner feedback: progress felt slow and the micro-slice sequence did not make
+  the architecture of a complete Agent system visible enough.
+- Evidence: recent rounds spent multiple review turns on fixture field names,
+  list indices, and assertion direction after the underlying Agent boundary was
+  already understood.
+- Decision: replace the remaining Phase 2B–6 micro-slices with five vertical
+  modules: route decision, unified runtime, context/session state,
+  evaluation/recovery, and game gateway/MVP.
+- Ownership change: reserve owner work for task contracts, runtime assembly,
+  context policies, state transitions, and evaluation verdicts. AI owns routine
+  Python, schemas, fixtures, fake clients, repetitive validators, and tests.
+- Review change: report all visible blocking issues in one pass and assess only
+  after a complete module, not after mechanical corrections.
+- Evidence change: deterministic tests and a live smoke run for the same
+  behavior stay in one module.
+- Current module acceptance: a manual route snapshot produces a reachable
+  route decision and trace through one guarded route tool, using the same entry
+  point with a fake or real OpenAI client and executing no game action.
 
 ## Curriculum alignment — 2026-07-17
 

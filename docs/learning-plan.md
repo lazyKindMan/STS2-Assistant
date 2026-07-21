@@ -1,291 +1,261 @@
-# STS2 Agent teaching and implementation plan
+# STS2 Agent accelerated learning plan
 
 ## Goal
 
-Build an inspectable Slay the Spire 2 Agent that can use the current game
-state to:
+Build an inspectable Slay the Spire 2 Agent that can choose legal card rewards
+and reachable map nodes from fresh game state, explain its decision, expose an
+auditable trace, and eventually execute one action through a safe game
+boundary.
 
-1. choose one legal card reward or skip;
-2. choose one currently reachable map node;
-3. explain the decision and preserve an auditable execution trace;
-4. eventually execute the selected action through one game boundary and read
-   fresh state afterward.
+The curriculum teaches how a complete Agent system is assembled. Python dict
+plumbing, fixture mechanics, and repetitive test syntax are supporting work,
+not the main learning target.
 
-The model supplies strategic judgment. This repository builds the harness:
-observations, legal actions, context, tools, validation, state transitions,
-traces, recovery, and the game interface. Win-rate optimization is not the
-first learning target.
+## Curriculum pivot — 2026-07-21
 
-## How the reference syllabus is adapted
+The original plan established useful boundaries but split them into too many
+small lessons. Recent rounds spent more time correcting field names and single
+assertions than reasoning about Agent architecture. The remaining curriculum
+therefore changes from micro-slices to end-to-end modules.
 
-The teaching pattern comes from
-`/Users/logan/PycharmProjects/learn-claude-code`: keep one Agent loop stable and
-add one harness mechanism per lesson. We borrow the pattern, not all twenty
-features.
+The completed work is preserved. The new plan changes sequencing and ownership:
 
-| Reference topic | STS2 adaptation | Timing |
+- one module delivers one runnable vertical capability;
+- related offline and live evidence belong to the same module;
+- the owner writes an architecture contract, state transition, context policy,
+  or evaluation rule rather than routine data-access code;
+- AI supplies fixtures, schemas, fake providers, repetitive validation,
+  mechanical Python, and tests unless one of those is the learning concept;
+- review reports all currently visible blocking issues together;
+- assessment happens once per completed module.
+
+Systematic Agent learning does not mean adding every fashionable capability.
+Multi-agent orchestration, RAG, vector databases, GUI automation, OCR, and RL
+remain deferred until the runtime has a concrete need for them.
+
+## Target system
+
+```text
+manual fixture or GameGateway
+  -> fresh StateSnapshot
+  -> Observation + LegalActions
+  -> task-specific TurnContract
+       instructions
+       provider tool schemas
+       executable guarded tools
+       final-output schema and validator
+  -> AgentRuntime
+       context selection
+       provider call
+       tool transition loop
+       stop/limit/recovery policy
+  -> Decision + Trace
+  -> Evaluator
+  -> optional safe execution
+       re-observe -> revalidate -> execute -> re-observe
+```
+
+The important boundaries are:
+
+- **GameGateway** owns external reads and actions.
+- **Observation normalizer** converts raw state to current bounded facts.
+- **Legal-action enumerator** is authoritative for immediate choices.
+- **Turn contract** supplies only the instructions, schemas, tools, and
+  validators relevant to one task.
+- **Context policy** selects fresh observation, useful tool results, and
+  optional session intent without accumulating stale state.
+- **Provider adapter** translates vendor requests and responses.
+- **Agent runtime** performs model/tool transitions and stops within a budget.
+- **Guards** validate tool requests and final actions before side effects or
+  return.
+- **Trace evaluator** measures protocol behavior separately from strategy
+  quality.
+
+## Completed foundation
+
+| Capability | Agent knowledge already practiced | Evidence |
 | --- | --- | --- |
-| s01 Agent Loop | model response -> tool execution -> tool result -> next model turn or stop | Already practiced |
-| s02 Tool Use | small read-only card/map knowledge tools behind a dispatch map | Already practiced; extend for routes |
-| s03 Permission | validate tool calls and legal game actions before execution | Before any live action |
-| s04 Hooks | only introduce after two cross-cutting needs actually exist | Optional, later |
-| s05 Planning | a revisable route intention, not a generic coding todo list | After route decisions work |
-| s06 Subagent | no current product need | Deferred |
-| s07 Skill Loading | load task-specific card or map guidance only if prompt/knowledge size justifies it | Optional, after two decision types |
-| s08 Context Compact | explicit fresh-state selection and a small context budget; no four-layer compactor yet | Before multi-turn game sessions |
-| s09 Memory | game-session route intent only; not self-updating long-term memory | After route decisions work |
-| s10 System Prompt | assemble card/map instructions from the actual decision type and tools | After both concrete modes exist |
-| s11 Error Recovery | bounded retries and explicit terminal failures | After deterministic protocol tests |
-| s12-s18 tasks, background, teams, worktrees | unrelated to the first playable assistant | Deferred |
-| s19 MCP | one possible game integration boundary, not a mandatory architecture | Integration phase only |
-| s20 Comprehensive | all selected mechanisms return to one provider-neutral loop | Final consolidation |
+| Manual card choice | observation, policy, dynamic legal actions | deterministic legal decision |
+| Provider-neutral loop | tool request, tool result, next model turn, stop | inspectable trace |
+| OpenAI adapter | provider boundary and structured response normalization | fake and live API runs |
+| Card vertical slice | end-to-end composition | legal card decision plus trace |
+| Safety gates | capability allowlist, tool arguments, final action | invalid requests rejected before use |
+| Turn isolation | provider context lifecycle | independent request sequence test |
+| Route observation | full topology versus current action space | reachable-node test |
 
-Two rules override the reference order:
+These are real Agent components. The missing learning value is their assembly
+into a configurable runtime and their operation across more than one task.
 
-- card choice and route choice are implemented in separate increments;
-- no abstraction is introduced until card and route provide two concrete
-  usages.
+## Accelerated modules
 
-## Current baseline
+### Module 1 — End-to-end route decision (current)
 
-Completed evidence:
+Primary concept: **vertical Agent composition**.
 
-- a manual card observation with an explicit legal action space;
-- an offline provider-neutral Agent loop with one correlated tool result;
-- an OpenAI Responses API adapter and structured response normalizer;
-- offline tests for the loop and provider boundary;
-- one AI-operated live GPT-5.6-sol trace proving the provider path can work.
+Supporting concepts: task-specific tool contract and final-action safety.
 
-The important remaining gap is that the owner has not yet written and operated
-a repository entry point that composes the real client, observation, tools,
-Agent loop, and final trace.
-
-## Target runtime shape
+User-visible behavior:
 
 ```text
-raw current game state
-  -> normalize observation + enumerate legal actions
-  -> select decision type and bounded context
-  -> call model with only the relevant tools
-  -> validate requested tool + arguments
-  -> execute read-only knowledge tool
-  -> append correlated tool result
-  -> call model again until final or limit
-  -> validate final action against the observation
-  -> return decision + trace
-  -> optional live phase: re-read state, validate again, execute, re-observe
+manual map snapshot
+  -> route observation
+  -> model may inspect one reachable path
+  -> guarded local route tool result
+  -> model returns one reachable node and reason
+  -> decision + trace
 ```
 
-Keep these boundaries visible even when their first implementation is a plain
-function:
+One entry point must accept either a fake Responses client or the real OpenAI
+client. The deterministic test and one optional live smoke run verify the same
+behavior; they are not separate lessons.
 
-- **Game gateway** reads or acts on the external game.
-- **Observation normalizer** converts raw state to bounded card or map facts.
-- **Legal-action enumerator** is authoritative for what may be selected now.
-- **Context builder** decides what the model sees this turn.
-- **Provider adapter** translates one vendor API to internal model events.
-- **Agent loop** repeats model/tool transitions and enforces a turn limit.
-- **Tool/action guard** validates before local or external execution.
-- **Decision validator** rejects invented or stale actions.
-- **Trace evaluator** checks protocol behavior independently of strategy quality.
+Acceptance:
 
-## Roadmap
+- trace contains `observation -> tool_call -> tool_result -> final`;
+- the requested `node_id` is currently reachable;
+- the final `choice` is in `reachable_node_ids`;
+- a route turn cannot see or execute `get_card_facts`;
+- no game action is executed.
 
-Each slice adds one observable behavior, reserves one human-owned core, and
-ends with deterministic evidence plus a plain-language reflection.
+Human-owned core:
 
-### Phase 0 — Agent foundations (complete)
+`build_route_turn_contract` — compose the route instructions, route tool
+schema, guarded executable tool, final-output schema, and final validator into
+one explicit concrete contract. The surrounding provider parameterization,
+route tool implementation, fake client, entry point, and tests are AI-supported.
 
-| Slice | Observable behavior | Primary concept | Human-owned core |
-| --- | --- | --- | --- |
-| 0A | Return only an offered card ID or legal skip | observation and legal action space | `choose_card` rule |
-| 0B | Feed one local tool result into a second model turn | tool use and state transition | `run_agent_turn` |
-| 0C | Translate OpenAI output items to provider-neutral events | provider boundary | `normalize_openai_response` |
+Expected change budget: at most five production files, three test files, 300
+new non-test lines, and no new dependency.
 
-### Phase 1 — One owner-operated real card decision
+### Module 2 — Unified card/route Agent runtime
 
-#### 1A. Real API entry point — current next slice
+Primary concept: **runtime task assembly**.
 
-- Behavior: one command/function loads a manual observation, creates the real
-  OpenAI client, runs the tool loop, and prints a legal decision plus trace.
-- Acceptance: the trace contains
-  `observation -> tool_call -> tool_result -> final`; one Agent turn may contain
-  two or more model API calls.
-- Human-owned core: `run_live_decision` composition function.
-- AI support: entry-point signature, deterministic fake-client test, review,
-  environment check, and live verification.
-- Deliberately absent: retries, route choice, game action execution.
+Card and route become the two concrete usages from which a small shared
+`TurnSpec`/`TurnContract` shape can be extracted. The Agent loop remains
+provider-neutral.
 
-#### 1B. Final-action gate
+Acceptance:
 
-- Behavior: an invented card ID or illegal `skip` is rejected before it is
-  returned to a caller.
-- Acceptance: `card_x` fails when the observation offers only
-  `card_a/card_b/card_c`; an offered ID passes.
-- Human-owned core: `validate_card_decision`.
+- `run_decision("card", ...)` and `run_decision("route", ...)` share one
+  runtime path;
+- each task exposes only its own instructions, tools, schemas, and validators;
+- adding a task changes task assembly, not the loop;
+- existing card and route traces remain inspectable.
 
-#### 1C. Tool-call gate
+Human-owned core: the task-selection and runtime-assembly transition.
 
-- Behavior: the harness does not execute an unregistered tool or query facts
-  for a card outside the current offered IDs.
-- Acceptance: `get_card_facts(card_x)` is rejected before the handler runs.
-- Human-owned core: `validate_tool_request`.
+### Module 3 — Context and session state
 
-#### 1D. Independent-turn isolation
+Primary concept: **context engineering**.
 
-- Behavior: two independent card decisions using the same application process
-  do not leak `previous_response_id`, observations, or tool results.
-- Acceptance: the first API request of turn two contains its new observation
-  and no response ID from turn one.
-- Human-owned core: the turn start/reset rule.
+Supporting concepts: state ownership and bounded memory.
 
-### Phase 2 — Route choice as a second decision domain
+Explicitly separate:
 
-#### 2A. Route observation and legal actions
+- fresh game observation, replaced every decision;
+- current Agent-turn events, retained only through that tool loop;
+- provider response correlation, owned by one adapter instance;
+- optional route intent, retained across map steps but never authoritative over
+  fresh legal actions.
 
-- Behavior: a manual map snapshot exposes full useful topology separately from
-  the smaller set of nodes reachable on the current step.
-- Acceptance: the decision may return only a reachable node ID.
-- Human-owned core: `build_route_observation`.
+Acceptance: a context manifest shows what was included or omitted; stale
+observation and stale legal actions cannot survive into the next decision.
 
-#### 2B. One offline route tool turn
+Human-owned core: `build_model_context`, including the selection and omission
+rule.
 
-- Behavior: a scripted model inspects one reachable node/path through a local
-  read-only tool, consumes the result, and returns one legal node.
-- Acceptance: trace order matches the card loop while route data and tools are
-  different.
-- Human-owned core: the route tool request/argument contract.
+### Module 4 — Evaluation and bounded recovery
 
-#### 2C. One real route decision
+Primary concept: **Agent evaluation**.
 
-- Behavior: the real provider chooses a currently reachable node from the
-  manual map snapshot and returns a reason plus trace.
-- Acceptance: the final node is in `reachable_node_ids`; no game action is
-  executed yet.
-- Human-owned core: `run_live_route_decision` composition function.
+Supporting concepts: bounded autonomy and error recovery.
 
-### Phase 3 — Generalize only after two concrete usages
+Build one scenario runner that produces a compact report for normal and failure
+cases instead of treating every failure as a separate course round.
 
-#### 3A. Runtime task assembly
+Required scenarios:
 
-- Behavior: `card` and `route` turns expose different instructions, schemas,
-  tools, and final validators while sharing the same Agent loop.
-- Acceptance: a card turn cannot see route tools and a route turn cannot call
-  card-only tools.
-- Human-owned core: `build_turn_spec`.
-- Reference lesson: s10 runtime prompt assembly based on real state, not keyword
-  guessing.
+- legal tool-assisted final decision;
+- unknown or out-of-scope tool request;
+- malformed final event;
+- repeated tool calls reaching the configured limit;
+- one selected transient provider failure within a fixed retry budget.
 
-#### 3B. Bounded context builder
+Protocol correctness and strategy quality remain separate scores.
 
-- Behavior: each model turn records which current observation, relevant tool
-  results, and optional route plan were included or omitted.
-- Acceptance: a stale observation is replaced rather than accumulated; any
-  budget omission is visible in the trace.
-- Human-owned core: `build_model_context` selection rule.
+Human-owned core: the evaluation verdict policy that maps trace/outcome evidence
+to pass, fail, or explicit terminal error.
 
-#### 3C. Revisable route intent
+### Module 5 — Game gateway and playable MVP
 
-- Behavior: a short session plan can prefer future nodes across map steps, but
-  the newest reachable set always overrides stale intent.
-- Acceptance: when a planned node becomes unreachable, the Agent chooses only
-  from the fresh legal actions and records that it revised the plan.
-- Human-owned core: `update_route_plan`.
-- Reference lesson: adapt planning and memory to game-session state; do not add
-  a generic task system or persistent self-editing memory.
+Primary concept: **environment interaction state machine**.
 
-### Phase 4 — Evaluation and resilience
+Inspect the available game boundary first, then choose direct HTTP or MCP; do
+not implement both. Preserve manual fixtures and a fake gateway for tests.
 
-Run these as separate small iterations, one failure behavior at a time.
-
-| Slice | Observable behavior | Primary concept | Human-owned core |
-| --- | --- | --- | --- |
-| 4A | A trace policy can require a configured tool before final without hardcoding OpenAI or card rules into the loop | protocol evaluation | `validate_trace` |
-| 4B | Malformed final output becomes an explicit terminal error/fallback, not a Python key failure | model-output safety | final-event validation rule |
-| 4C | Repeated tool calls stop at a defined limit with a traceable reason | bounded autonomy | loop-limit transition |
-| 4D | One selected transient API failure retries within a fixed budget, then stops | error recovery | recovery state transition |
-
-Strategy evaluation remains separate: a small human-reviewed set may compare
-decision reasons and preferences, but it must not weaken legal/protocol tests.
-
-### Phase 5 — One live game boundary
-
-Choose direct HTTP or MCP after inspecting the available game adapter; do not
-implement both. Use `/Users/logan/PycharmProjects/CharTyr-STS2-Agent` only as a
-read-only contract reference.
-
-#### 5A. Read current card-reward state
-
-- Behavior: fetch one raw live state and normalize it to the already-tested
-  card observation without executing an action.
-- Human-owned core: `normalize_card_reward_state`.
-
-#### 5B. Execute one card action safely
-
-- Behavior: re-read state, verify the chosen card/skip is still legal, execute
-  it, then return fresh post-action state.
-- Human-owned core: `execute_card_decision_safely`.
-
-#### 5C. Read current map state
-
-- Behavior: normalize full topology and currently reachable nodes from one live
-  map state without moving.
-- Human-owned core: `normalize_map_state`.
-
-#### 5D. Execute one route action safely
-
-- Behavior: re-read state, validate the chosen node is still reachable, move,
-  and return fresh post-action state.
-- Human-owned core: `execute_route_decision_safely`.
-
-Card execution and route execution remain separate iterations.
-
-### Phase 6 — Consolidate the playable MVP
-
-#### 6A. Card screen through the unified runtime
-
-- Behavior: the application recognizes a supported card-reward state and runs
-  the card turn through the shared harness.
-- Human-owned core: the card dispatch transition.
-
-#### 6B. Map screen through the unified runtime
-
-- Behavior: in a later iteration, the same application recognizes a supported
-  map state and runs the route turn.
-- Human-owned core: the route dispatch transition.
-
-The finished MVP is inspectable and bounded, not autonomous gameplay. Combat,
-shops, events, relic decisions, OCR/UI automation, multi-agent delegation,
-background workers, cron, RAG, vector databases, RL, and win-rate training stay
-outside scope until explicitly selected after this plan.
-
-## Teaching protocol for every slice
+Runtime transition:
 
 ```text
-CONCEPT
-  define one harness concept
-  -> connect it to the current STS2 behavior
-  -> user predicts/designs the transition
-IMPLEMENT
-  AI supplies fixture/signature/failing test
-  -> user writes exactly one human-owned core
+observe fresh state
+  -> classify supported decision type
+  -> run Agent decision
+  -> re-observe
+  -> revalidate against fresh legal actions
+  -> execute one action
+  -> observe resulting state
+```
+
+Card and route execution are added as sequential safety checkpoints inside the
+module, never as one unreviewed bulk change.
+
+Human-owned core: the application state transition that decides whether to
+read, decide, revalidate, execute, or stop.
+
+## Module workflow
+
+```text
+SYSTEM MAP
+  -> show component ownership and one end-to-end acceptance trace
+CONTRACT
+  -> owner designs or predicts the architecture-level rule
+BUILD
+  -> AI scaffolds routine code/tests; owner implements the core
 REVIEW
-  inspect the attempt
-  -> run the smallest deterministic test
-  -> make one correction at a time
-REFLECT
-  user explains input, legal actions, context change, stop rule, and evidence
-DONE
-  score 5 dimensions, update journal, choose the next slice
+  -> inspect the full attempt and report all visible blocking issues together
+VERIFY
+  -> deterministic suite + trace; live smoke when the same module needs it
+ASSESS
+  -> AI supplies reflection, scores the module, updates the journal
 ```
 
-Live API calls demonstrate integration but never replace deterministic tests.
-The teaching plan may be adjusted from journal evidence, but later mechanisms
-must not jump ahead of an unfinished prerequisite.
+A concept question is used only when it tests an architectural decision. It is
+not a gate for obvious syntax or fixture access. Reflection is always supplied
+by AI after verification.
 
-## Immediate next step
+## Evidence and assessment
 
-Resume Phase 1A with `开始本轮`. The first concept check is the distinction
-between one Agent turn and its multiple model API calls. After the answer, AI
-will scaffold the runnable entry point and failing offline test, then stop for
-the owner's implementation.
+Every module ends with:
+
+1. one runnable end-to-end example;
+2. deterministic tests for its contract and important failure boundary;
+3. an inspectable trace or context manifest where relevant;
+4. a statement of what the evidence proves and does not prove;
+5. one five-dimension assessment recorded in the learning journal.
+
+Live API evidence demonstrates provider integration but never replaces
+deterministic tests. A legal action proves safety for covered inputs, not
+strategic quality.
+
+## Deferred capabilities
+
+Combat, shops, events, relic decisions, broad card ingestion, persistent
+self-editing memory, multi-agent delegation, background workers, cron, RAG,
+vector databases, MCTS, RL, OCR, and unattended game automation remain outside
+the accelerated MVP unless explicitly selected later.
+
+## Immediate next command
+
+Send `开始本轮` to begin Module 1. The first step is a system map and
+the concrete `build_route_turn_contract` wiring contract, followed by one
+owner architecture decision rather than a Python field-access exercise.

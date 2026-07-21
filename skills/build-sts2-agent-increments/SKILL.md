@@ -1,280 +1,229 @@
 ---
 name: build-sts2-agent-increments
-description: Mentor the user through small, learning-oriented iterations for the Slay the Spire 2 card-selection and map-routing assistant. Use when teaching, designing, implementing, testing, debugging, reviewing, scoring, or extending its game state, card facts, decision policy, prompts, tools, evaluations, card choices, or route choices. Preserve a human-owned piece of key code in every iteration, teach and assess Agent concepts with evidence, keep each change understandable and independently testable, and prevent speculative architecture or premature game integration.
+description: Mentor the STS2 assistant as an accelerated, architecture-first Agent course. Deliver one end-to-end capability per module; keep a human-owned task contract, state transition, context policy, or evaluation rule; let AI handle routine Python, fixtures, schemas, fake clients, and tests; verify legal actions, tool boundaries, traces, and state ownership without turning the course into dict-syntax practice.
 ---
 
-# Build STS2 Agent Increments
+# Build the STS2 Agent in accelerated modules
 
-Build the assistant through the smallest Agent runtime behavior the user can
-understand, trace, test, and modify. Use card and map decisions as a domain for
-Agent learning; do not let card-strategy code or Python syntax practice become
-the curriculum by default.
+Teach the architecture of a complete Agent system through runnable card and
+route decisions. Optimize for:
 
-Optimize first for learning, then correctness, then feature coverage, and finally performance.
+1. system understanding;
+2. correct, observable, and testable behavior;
+3. useful vertical capability;
+4. implementation simplicity.
 
-## Read the project context
+Do not let Python field access, repetitive validators, or isolated assertions
+become the curriculum unless they are the selected learning concept.
 
-Read [references/sources-and-lessons.md](references/sources-and-lessons.md) before making decisions involving:
+## Read project state first
 
-- wiki-derived card data or test fixtures;
-- game-state and legal-action contracts;
-- card-reward or map-route flows;
-- the `CharTyr-STS2-Agent` reference implementation;
-- Mod, HTTP, MCP, event streaming, knowledge, or multi-agent integration.
+Read these files before selecting or resuming a module:
 
-Read `docs/project-scope.md` when selecting the next learning phase or deciding whether a feature is in scope.
+- `docs/learning-journal.md` for current workflow state and observed gaps;
+- `docs/learning-plan.md` for the accelerated module sequence;
+- `docs/project-scope.md` for runtime boundaries and deferred capabilities;
+- `docs/mentor-workflow.md` for short-command behavior.
 
-Read `docs/learning-plan.md` for the ordered card-to-route curriculum, the
-mapping from `learn-claude-code` harness lessons, the current prerequisite, and
-the human-owned core assigned to each planned slice.
+Read [references/sources-and-lessons.md](references/sources-and-lessons.md)
+before using wiki data, interpreting game-state contracts, inspecting the
+read-only `CharTyr-STS2-Agent` reference, or selecting HTTP/MCP integration.
 
-Read `docs/learning-journal.md` before teaching or assessing so the current iteration builds on concepts already practiced and known gaps.
+## Deliver a vertical module
 
-Read `docs/mentor-workflow.md` when the user sends a short workflow command or asks how to continue.
+Choose one end-to-end capability that can be run, traced, and tested. Related
+internal behaviors may ship together when they form that vertical result.
 
-## Select one learning slice
+Use this sequence:
 
-Choose exactly one observable behavior.
+1. end-to-end route decision using fake and real provider boundaries;
+2. unified card/route runtime assembled from task-specific contracts;
+3. bounded context and session-state policy;
+4. scenario evaluation and bounded recovery;
+5. game gateway and playable state machine.
 
-Prefer this sequence:
+Do not repeat already understood card mechanics merely to create another tiny
+lesson. Do not generalize until card and route provide two concrete usages.
 
-1. Reuse the completed manual card observation and legal-action boundary.
-2. Run one deterministic scripted model turn that requests one local tool.
-3. Execute the allowed tool, append its result to context, and run the scripted
-   model once more for a final response.
-4. Replace only the scripted model boundary with one real model provider.
-5. Let the owner compose and operate one real end-to-end card decision.
-6. Add card final-action and tool-call gates one behavior at a time.
-7. Make independent-turn context isolation explicit.
-8. Add route observation, one offline route tool turn, and one real route turn
-   as three separate increments.
-9. Generalize card and route prompt/tool/context assembly only after both
-   concrete usages exist.
-10. Evaluate protocol traces and add bounded recovery one failure mode at a
-    time.
-11. Add one selected read-only live game boundary before any external action;
-    add card and route actions in separate later increments with fresh-state
-    revalidation.
+Default module budget:
 
-Do not implement card selection and route selection in the same iteration.
+- five production files;
+- three test files;
+- 300 new non-test lines;
+- zero new dependencies unless the capability genuinely requires one.
 
-## Assign code ownership
+Split only when the work no longer has one understandable end-to-end outcome.
+An offline deterministic test and live smoke run for the same outcome remain
+one module.
 
-Designate exactly one **human-owned core** before writing code. Prefer the function or rule that best expresses the Agent concept being learned, such as:
+## Show the system map before code
 
-- a `run_agent_turn` tool-call state transition;
-- a context-selection rule;
-- a structured prompt or final-output validator;
-- a stop condition or tool-call safety rule;
-- an evaluation metric.
+Every module starts by showing how its components connect:
 
-List the remaining **AI-supported work**, including routine Python dict access,
-types, fixture loading, scripted model behavior, local tool implementation,
-signatures, docstrings, failing tests, test execution, explanations, and review.
-Do not reserve incidental Python mechanics as the learning checkpoint when the
-selected objective is an Agent concept.
+```text
+state source
+  -> observation + legal actions
+  -> turn contract
+  -> context
+  -> provider response
+  -> guarded tool or final decision
+  -> transition/stop
+  -> trace and evaluation
+```
 
-Prepare the input/output contract and one failing acceptance test, then stop at a clearly labeled learning checkpoint. Do not fill in the human-owned core unless the user explicitly requests a full implementation.
+State which component owns each input, state value, validation rule, and side
+effect. Identify what is current-turn state, provider correlation state,
+session state, or external game state.
 
-When the user shares an attempt:
+## Assign architecture-level ownership
 
-1. Ask them to describe the intended rule if it is not already clear.
-2. Review the existing code before editing it.
-3. Identify the smallest correctness or clarity issue.
-4. Offer a targeted hint before offering code.
-5. Preserve their structure and authorship.
+Designate exactly one human-owned core. Prefer:
 
-Escalate help only as requested: conceptual question -> targeted hint -> pseudocode -> partial snippet -> full solution.
+- a task or turn contract;
+- runtime task assembly;
+- a context selection/omission rule;
+- a model/tool or environment state transition;
+- a stop/recovery policy;
+- an evaluation verdict rule.
 
-## Follow the short-command protocol
+AI-supported work includes:
 
-Use `docs/learning-journal.md` as the persistent state store. Resume the recorded workflow state instead of asking the user to restate context.
+- fixtures and sourced metadata;
+- routine dict access and type plumbing;
+- provider schemas and mechanical adapter parameterization;
+- local read-only tools and repetitive task guards;
+- fake provider behavior;
+- signatures, docstrings, acceptance tests, execution, and debugging.
 
-Interpret commands as follows:
+Use this declaration:
 
-| Command | Action |
+```text
+Human-owned core: <architecture contract, state transition, context policy, or evaluation rule>
+AI-supported work: <fixtures, schemas, adapters, routine code, tests, and debugging>
+Learning checkpoint: <the exact architecture-level implementation handed to the owner>
+```
+
+Do not implement or silently replace the human-owned core unless the user
+explicitly asks for the full solution.
+
+## Make wiring explicit
+
+Before handoff, provide:
+
+| Item | Required detail |
 | --- | --- |
-| `开始本轮` | Start or resume the current iteration and enter `CONCEPT` |
-| `提示 1` to `提示 4` | Give the requested help level without changing state |
-| `我写完了` / `我改完了` | Inspect code and tests in `REVIEW` |
-| `状态` | Report state, ownership, evidence, and next input |
-| `下一轮` | Offer up to two journal-driven exercises after `DONE` |
-| `选1` / `选2` | Select an exercise and begin its concept stage |
-| `暂停` | Save state and stop |
+| Inputs | concrete shape/example, producer, and consumer |
+| Output | exact shape and next consumer |
+| Existing components | what to reuse and what each already owns |
+| Dependencies | injected fake versus real implementation |
+| State | lifetime and owner of every mutable value |
+| Data flow | one ordered end-to-end line |
+| Core | exact architectural decision left to the owner |
+| Non-goals | deliberately excluded behavior |
 
-Advance automatically after normal prose answers during `CONCEPT`. During
-`REFLECT`, provide the reference answer yourself, score from existing evidence,
-and advance without asking the user to reply or type `继续`.
+Do not expect the owner to infer wiring from type annotations or copy a test to
+discover why parameters exist.
 
-Follow this state sequence:
+## Use the short-command workflow
+
+Persist state in `docs/learning-journal.md` and follow:
 
 ```text
 READY -> CONCEPT -> IMPLEMENT -> REVIEW -> REFLECT -> DONE
 ```
 
-At each transition, update the current-status block in `docs/learning-journal.md`. Append a history entry only after completing the `DONE` assessment.
+| Command | Action |
+| --- | --- |
+| `开始本轮` | Start/resume the current accelerated module |
+| `提示 1`–`提示 4` | Escalate from architecture question to smallest local snippet |
+| `我写完了` / `我改完了` | Inspect the complete attempt and verify it |
+| `状态` | Report module, state, concept, ownership, evidence, and next input |
+| `下一轮` | Offer at most two next modules after assessment |
+| `选1` / `选2` | Select and start a module |
+| `暂停` | Save state and stop |
 
-If a command is inconsistent with the current state, explain the expected next input in one sentence and preserve the state.
+Ask a concept question only when its answer changes an architecture decision.
+Do not gate progress on obvious syntax or fixture access. During `REFLECT`, AI
+supplies the correct explanation and advances without waiting for another
+owner reply.
 
-## Mentor the Agent learning cycle
+## Review efficiently
 
-Treat learning as an output of every iteration, not as a side effect of producing code.
+When the owner submits an attempt:
 
-Choose one primary Agent concept and at most one supporting concept. Teach the primary concept with:
+1. inspect the whole relevant implementation;
+2. run the smallest end-to-end test;
+3. report all visible blocking issues in one pass;
+4. separate architecture errors from mechanical errors;
+5. fix AI-owned plumbing directly when safe;
+6. preserve the owner-authored architecture core;
+7. rerun focused and regression tests.
 
-1. A plain-language definition.
-2. Its location in the current STS2 behavior.
-3. One boundary with a neighboring concept.
-4. One common misconception or failure mode.
-5. One prediction or design question for the user.
+Do not create multiple turns for field-name, index, formatting, or assertion
+direction errors that can be diagnosed together.
 
-Use this cycle:
+Escalate help as needed:
 
 ```text
-explain briefly -> ask for a prediction -> scaffold -> learning checkpoint
--> user implements -> review evidence -> AI reference reflection -> score -> journal
+conceptual boundary -> targeted pointer -> pseudocode -> local snippet -> full solution on explicit request
 ```
 
-Prefer questions that make the user reason about Agent behavior, for example:
+## Preserve Agent boundaries
 
-- Is this model output a tool request or a final response?
-- Which part of context changes after the tool returns?
-- Who validates the tool name and arguments before execution?
-- What state or limit stops the model/tool loop?
-- Which trace event would falsify the claim that the tool result was fed back?
+- **Observation**: fresh bounded game facts.
+- **Legal actions**: authoritative choices accepted now.
+- **Turn contract**: relevant instructions, schemas, tools, and validators.
+- **Context**: deliberately selected information visible to a model call.
+- **Provider adapter**: vendor request/response translation and correlation.
+- **Tool boundary**: pre-execution name and argument validation.
+- **Agent transition**: append tool result, call again, stop, or fail.
+- **Session state**: bounded intent across decisions, never stronger than fresh
+  legal actions.
+- **Decision**: selected action plus reason.
+- **Trace/evaluation**: auditable events and evidence-based verdicts.
+- **Game gateway**: external observation and action side effects.
 
-Do not turn each iteration into a broad lecture. Explain only concepts needed to understand the current code and one nearby trade-off.
+Keep strategy quality separate from protocol and legality. Re-read and
+revalidate fresh state before any external action.
 
-## Assess the current milestone
+## Verify and assess once per module
 
-Score only after the user submits a meaningful attempt and relevant evidence has been inspected.
+Verification should include:
 
-Use this rubric, scoring each dimension from 0 to 4:
+1. one deterministic end-to-end success case;
+2. the most important safety/failure boundary;
+3. trace or context evidence for transitions in scope;
+4. relevant regression tests;
+5. a live smoke run only when provider/game integration is part of the same
+   capability.
 
-| Dimension | Evidence to inspect |
-| --- | --- |
-| Conceptual understanding | User explanation of context, model response, tool boundary, state transition, and neighboring boundaries in scope |
-| Behavioral correctness | User-owned Agent transition, tool validation, result feedback, stop behavior, and legal final output |
-| Evaluation discipline | Trace assertions for model turns, tool calls, context changes, reproducibility, and failure cases |
-| Scope and simplicity | Size, directness, and absence of premature abstractions |
-| Ownership and explanation | Ability to explain, modify, and defend the user-written Agent transition or context rule; do not score AI-authored Python plumbing as owner evidence |
+After the module passes, explain what each form of evidence proves and does not
+prove. Then score once across:
 
-Judge against the current milestone. Do not deduct points for deliberately deferred future features.
+1. conceptual understanding;
+2. behavioral correctness;
+3. evaluation discipline;
+4. scope and simplicity;
+5. ownership and explanation.
 
-For every assessment:
+Record one total out of 20, one strength, one gap, and the next module in the
+learning journal. Do not score scaffolding or individual corrections.
 
-1. Show the five evidence-backed scores and total out of 20.
-2. Separate user-authored evidence from AI-authored scaffold.
-3. Name one demonstrated strength.
-4. Name one concept gap or uncertainty.
-5. Assign one small next exercise that targets the gap.
-6. Explain what would raise the relevant score by one point.
-7. Append the result to `docs/learning-journal.md` after the review is complete.
+## Source and capability boundaries
 
-Do not use scores as praise, punishment, or a claim about production readiness. Use them to make learning progress and weak evidence visible.
+- Use small reviewed local card/map fixtures; normal tests never call the live
+  wiki.
+- Keep sourced facts separate from human-authored strategy expectations.
+- Treat `/Users/logan/PycharmProjects/CharTyr-STS2-Agent` as read-only.
+- Defer Mod/HTTP/MCP/SSE integration until the gateway module.
+- Do not add combat automation, multi-agent orchestration, background workers,
+  persistent self-editing memory, RAG, vector databases, MCTS, RL, GUI, OCR, or
+  unattended play unless the user explicitly selects that capability.
 
-## Define the increment before coding
+## Current module
 
-State all of the following:
-
-1. One learning objective.
-2. One user-visible behavior.
-3. One concrete input and expected output.
-4. The files expected to change.
-5. The capabilities deliberately left out.
-6. The human-owned core.
-7. The AI-supported work and exact learning checkpoint.
-8. The primary Agent concept and one question the user should answer.
-
-Before creating the learning checkpoint, make the human-owned function's
-wiring explicit with a compact table:
-
-| Parameter/output | Type or example shape | Produced by | Consumed by |
-| --- | --- | --- | --- |
-| each parameter | concrete Python/JSON shape | caller, fixture, or prior step | exact existing function or decision |
-| return value | concrete result shape | human-owned core | caller/test/next transition |
-
-Also list:
-
-- exact existing functions/classes the owner should call and their files;
-- which dependency is injected and may be fake in tests but real at runtime;
-- which objects must be constructed inside the function;
-- the ordered data flow in one line;
-- what existing loop, provider adapter, parser, or tool must not be rewritten.
-
-Do not treat a type annotation alone as an adequate input explanation. Do not
-make the owner discover dependency wiring by copying a test without first
-explaining why each value exists. For a small composition core, identify the
-exact missing wiring while leaving the final code for the owner.
-
-Keep the default increment within three production files, two test files, 150 new non-test lines, and zero new dependencies.
-
-If it exceeds the budget, split it and implement only the smallest independently valuable part.
-
-## Preserve clear Agent boundaries
-
-Keep these concepts separate even when they initially live in one small file:
-
-- **Observation**: the supplied game and choice state.
-- **Knowledge**: card facts and other versioned metadata.
-- **Legal actions**: the choices actually available in the current observation.
-- **Context**: the deliberately selected instructions, fresh observation,
-  tool descriptions, and prior tool results visible to the current model turn.
-- **Model response**: either a requested tool call or a final answer.
-- **Tool boundary**: validation and execution of one named capability with
-  structured arguments and a structured result.
-- **Agent state transition**: the rule that appends a tool result and decides
-  whether to call the model again or stop.
-- **Decision**: the chosen action, reason, and optional confidence.
-
-Use direct functions and plain data structures first. Introduce an interface only after a second implementation needs it.
-
-Treat the current loop as `build context -> model response -> validate tool
-request -> execute tool -> append result -> model response -> stop`. Re-read
-observation after a real external action once integration exists.
-
-## Use source data safely
-
-Use the STS2 wiki to create small local card-fact snapshots. Do not fetch the wiki during normal tests.
-
-Keep source facts separate from human-authored expected decisions. A card's cost, type, rarity, and rules text do not establish that it is the best choice for a deck.
-
-Start with one character and only enough cards to express the current test cases. Do not import the complete card catalog until repeated manual maintenance justifies an ingestion tool.
-
-## Avoid premature capabilities
-
-Do not add any of the following unless the user selects it as the current learning objective:
-
-- game Mod or memory integration;
-- HTTP or MCP servers;
-- SSE, polling infrastructure, or background workers;
-- multi-agent planner/combat handoff;
-- RAG or a vector database;
-- persistent self-updating knowledge;
-- GUI, OCR, or automatic game control;
-- MCTS, reinforcement learning, or training pipelines;
-- multiplayer, combat automation, shop, event, or relic systems.
-
-The completed Milestone 2 used a deterministic scripted model and one local
-read-only tool. Reuse those as testing seams; do not mistake them for
-production abstractions or repeat that milestone after the live adapter exists.
-
-## Verify and teach
-
-After implementation:
-
-1. Run the smallest relevant test.
-2. Demonstrate one successful example.
-3. Show the execution trace, including context changes, model turns, tool calls,
-   and the stop event that are in scope.
-4. Explain the observation, legal-action, context, model-response, tool, state-
-   transition, and decision boundaries that are in scope.
-5. Explain every new abstraction and dependency.
-6. Identify what remains deliberately unimplemented.
-7. Explain the input context, tool request, validation, tool result, next
-   transition, final output, and test evidence directly; do not require a
-   separate owner reflection response before advancing.
-8. Assess the completed user attempt using milestone-level evidence.
-9. Update the learning journal.
-10. Offer no more than two possible next increments.
-11. Stop after the current increment is complete.
+Begin the end-to-end route decision. Reuse the existing route observation,
+provider-neutral loop, and OpenAI adapter. Parameterize only what is currently
+card-specific, add one guarded route inspection tool and a legal final route
+decision, and return the same `decision + trace` shape without executing the
+game action.

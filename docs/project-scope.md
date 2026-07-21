@@ -2,124 +2,118 @@
 
 ## Project purpose
 
-Build a Slay the Spire 2 assistant as a concrete sandbox for learning Agent
-programming: context construction, model turns, tool calls, state transitions,
-validation, and evaluation.
+Build a Slay the Spire 2 assistant as a concrete environment for learning the
+architecture of a complete Agent system:
 
-Card and route decisions provide understandable inputs, but strategy quality is
-not the center of the curriculum. The project is successful when the owner can
-read an execution trace and explain why the Agent called a tool, what entered
-the model context, how the tool result changed that context, and why the loop
-stopped. Maximum win rate, complete game support, and unattended play are not
-initial goals.
+- fresh state and bounded observations;
+- dynamic legal actions;
+- task-specific instructions, tools, and output contracts;
+- provider calls and model/tool state transitions;
+- context selection and session state;
+- validation, traces, evaluation, and bounded recovery;
+- safe interaction with an external game boundary.
 
-## Smallest Agent definition
+Card and route strategy provide realistic inputs, but Python syntax practice
+and maximum win rate are not the curriculum.
 
-The learning target is this loop:
-
-```text
-goal + fresh observation
-  -> build bounded context
-  -> model returns a tool request or final response
-  -> validate and execute one allowed tool
-  -> append the tool result to context
-  -> model returns a legal final decision
-```
-
-The project has already exercised this structure with both a scripted model
-and an OpenAI Responses API adapter. The next increment closes the remaining
-learning gap by letting the owner compose and operate one real end-to-end card
-decision. Route choice follows as a separate decision domain.
-
-The complete phased sequence, reference-syllabus mapping, human-owned cores,
-and acceptance evidence are defined in `docs/learning-plan.md`.
-
-## Collaboration contract
-
-Every milestone reserves one key piece of code for the project owner to write personally. AI acts as a tutor, scaffold builder, test author, reviewer, and debugger around that code.
-
-For the current Phase 1A slice:
+## Runtime target
 
 ```text
-Human-owned core: run_live_decision composition function
-AI-supported work: entry-point signature, deterministic fake-client test, environment check, test execution, live verification, and review
-Learning checkpoint: stop after the entry-point scaffold and failing offline test; wait for the owner to compose the real client, observation, tools, and Agent loop
+GameGateway or manual fixture
+  -> StateSnapshot
+  -> Observation + LegalActions
+  -> TurnContract
+  -> AgentRuntime(model <-> guarded tools)
+  -> Decision + Trace
+  -> Evaluator
+  -> optional revalidate-and-execute boundary
 ```
 
-AI must not complete the human-owned function unless the owner explicitly requests the full implementation. If the owner asks for help, progress from a conceptual question to a hint, pseudocode, and partial snippet before providing a full answer.
+The owner should eventually be able to explain:
 
-Before moving past the current slice, the owner should be able to explain:
+1. which component owns each piece of state;
+2. how a task selects instructions, tools, schemas, and validators;
+3. why an Agent turn may contain several provider calls;
+4. how context changes after a tool result;
+5. what limits autonomy and rejects stale or invented actions;
+6. what deterministic tests, live calls, and traces each prove;
+7. how the Agent re-observes before an external action.
 
-1. Which context is sent into each model turn.
-2. How a model tool request differs from a final response.
-3. Why one Agent turn may contain multiple model API calls.
-4. How the tool result is appended before the next model turn.
-5. Which state or stop condition prevents an uncontrolled loop.
-6. What the execution trace and test do and do not prove.
+## Accelerated curriculum
 
-## Agent concept curriculum
-
-Use this as a direction, not as permission to teach every concept at once.
-
-| Phase | Primary Agent concepts |
-| --- | --- |
-| 0. Foundations (complete) | Observation, legal action space, tool loop, provider boundary |
-| 1. Real card decision | End-to-end composition, final/tool gates, independent turns |
-| 2. Route decision | Map observation, reachable actions, route tool use |
-| 3. Shared harness | Runtime prompt/tool assembly, context selection, route intent |
-| 4. Evaluation and resilience | Trace policies, malformed output, loop limits, bounded recovery |
-| 5. Live game boundary | Fresh-state normalization, revalidation, action execution |
-| 6. Playable MVP | Card and route dispatch added in separate increments to one runtime |
-
-Teach one primary concept and at most one supporting concept in each iteration. Record completed concepts and evidence in `docs/learning-journal.md`.
-
-## Phased implementation
-
-Use `docs/learning-plan.md` as the executable curriculum. Its order is:
+The detailed contract is in `docs/learning-plan.md`.
 
 ```text
-completed foundations
-  -> owner-operated real card decision
-  -> card tool/final safety gates
-  -> independent-turn context isolation
-  -> offline then real route decision
-  -> shared card/route harness
-  -> trace evaluation and bounded recovery
-  -> one selected live game boundary
-  -> card and route screen dispatch in separate increments
+completed card runtime and route observation
+  -> Module 1: end-to-end route decision
+  -> Module 2: unified card/route runtime
+  -> Module 3: context and session state
+  -> Module 4: evaluation and bounded recovery
+  -> Module 5: game gateway and playable MVP
 ```
 
-Do not collapse adjacent arrows into one iteration. A real API demonstration
-does not replace an offline deterministic test, and a valid final choice does
-not prove that the tool/context protocol was followed.
+Each module delivers one vertical capability. Related fake-provider tests and
+real-provider smoke evidence stay together. Assessment occurs once after the
+module works.
 
-## Source decisions
+## Human and AI ownership
 
-- Use the [STS2 wiki card list](https://slaythespire.wiki.gg/wiki/Slay_the_Spire_2:Cards_List) for small, reviewed card-fact snapshots.
-- Never call the wiki from normal tests.
-- Treat `/Users/logan/PycharmProjects/CharTyr-STS2-Agent` as a read-only architecture reference.
-- Reuse its state/action separation and fresh-state discipline.
-- Defer its full Mod, HTTP, MCP, SSE, planner/combat handoff, and persistent knowledge stack.
-- Read `skills/build-sts2-agent-increments/references/sources-and-lessons.md` for the detailed research notes and CodeGraph status.
+Every module reserves one architecture-level human-owned core. Preferred cores
+are:
 
-## Definition of done for every increment
+- a concrete task/turn contract;
+- runtime task assembly;
+- context-selection or omission policy;
+- an Agent/environment state transition;
+- bounded recovery or evaluation verdict logic.
 
-An increment is done only when:
+AI owns routine fixture access, schemas, mechanical adapter changes, fake
+providers, repetitive validators, tests, test execution, and Python syntax
+debugging unless one of those is the current learning concept.
 
-1. It introduces one observable behavior and one learning concept.
-2. Its input and expected output are written down.
-3. The smallest relevant automated test passes.
-4. Its trace makes model turns, tool calls, and stop conditions inspectable when
-   those concepts are in scope.
-5. No returned action falls outside the supplied legal choices.
-6. The owner can explain the context change or state transition introduced.
-7. New abstractions can be explained in plain language.
-8. Deliberately omitted work is recorded.
-9. The iteration stops before starting the next milestone.
+The learning checkpoint must not be a field-name transcription exercise.
 
 ## Current boundary
 
-Start Phase 1A with one owner-written `run_live_decision` composition function
-and a deterministic fake-client test. The slice may make a live OpenAI call for
-acceptance evidence, but it does not add route choice, retries, live game action
-execution, MCP, persistent memory, or multi-agent orchestration.
+The completed repository already contains:
+
+- one provider-neutral model/tool loop;
+- an OpenAI Responses adapter;
+- a tested and live card decision entry point;
+- card tool and final-action safety gates;
+- independent-turn provider context isolation;
+- a route observation with complete topology and current reachable nodes.
+
+The current module is an end-to-end route decision. It may parameterize the
+currently card-specific provider request, add one local route tool, compose a
+fake/real route entry point, and validate the final reachable node. It does not
+execute a game action.
+
+## External references and test data
+
+- Use the STS2 wiki only to create small reviewed local fact snapshots; normal
+  tests never depend on the live wiki.
+- Keep source facts separate from human-authored strategy expectations.
+- Treat `/Users/logan/PycharmProjects/CharTyr-STS2-Agent` as a read-only
+  contract reference.
+- Borrow its state/action separation and fresh-state discipline, not its full
+  Mod, HTTP, MCP, SSE, planner handoff, or persistent knowledge architecture.
+
+## Deferred capabilities
+
+Combat, shops, events, relic choices, broad knowledge ingestion, persistent
+self-editing memory, multi-agent orchestration, background workers, cron, RAG,
+vector databases, MCTS, RL, GUI/OCR automation, and unattended play remain out
+of scope until the five accelerated modules create a concrete need.
+
+## Definition of done for a module
+
+A module is complete only when:
+
+1. its vertical behavior runs end to end;
+2. deterministic tests cover the main contract and safety boundary;
+3. the relevant trace or context manifest is inspectable;
+4. every returned action is legal for the supplied fresh observation;
+5. component and state ownership can be explained plainly;
+6. evidence limits and deferred capabilities are explicit;
+7. the learning journal contains one module-level assessment.

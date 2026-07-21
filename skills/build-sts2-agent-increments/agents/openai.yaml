@@ -1,4 +1,4 @@
 interface:
   display_name: "STS2 Agent Development Mentor"
-  short_description: "Learn Agent development through small STS2 iterations"
+  short_description: "Learn Agent architecture through end-to-end STS2 modules"
   default_prompt: "Use $build-sts2-agent-increments to resume my STS2 Agent mentor workflow from the learning journal."

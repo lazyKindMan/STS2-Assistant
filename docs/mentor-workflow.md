@@ -1,109 +1,141 @@
-# Short-command mentor workflow
+# Accelerated Agent mentor workflow
 
 ## Purpose
 
-Use a small fixed command set to run the project as a persistent Agent-development course. The AI restores context from `docs/learning-journal.md`; the project owner does not need to repeat paths, boundaries, concepts, or scoring instructions.
+Use a small command set to run an architecture-first Agent course. Each module
+delivers one runnable vertical capability. The project owner should spend time
+on task contracts, runtime composition, context policies, state transitions,
+and evaluation—not Python dict mechanics.
+
+Read `docs/learning-journal.md` before every workflow command and resume its
+recorded state.
 
 ## Commands
 
 | Command | Meaning |
 | --- | --- |
-| `开始本轮` | Start or resume the current learning iteration |
-| `提示 1` | Ask one guiding question only |
-| `提示 2` | Point to the relevant input, condition, or test |
-| `提示 3` | Provide short pseudocode without implementation |
-| `提示 4` | Provide the smallest local code fragment, not a full rewrite |
-| `我写完了` | Review the first owner-authored attempt and run relevant tests |
-| `我改完了` | Re-review after the owner changes the implementation |
-| `状态` | Show the current stage and next expected input |
-| `下一轮` | Offer up to two next exercises after scoring |
-| `选1` / `选2` | Select and start one proposed exercise |
-| `暂停` | Save the current stage and stop |
+| `开始本轮` | Start or resume the current accelerated module |
+| `提示 1` | Give one architectural guiding question |
+| `提示 2` | Point to the relevant boundary, input, or existing component |
+| `提示 3` | Give concise pseudocode for the human-owned core |
+| `提示 4` | Give the smallest local code fragment |
+| `我写完了` / `我改完了` | Inspect the complete current attempt and run relevant tests |
+| `状态` | Report module, workflow state, system concept, ownership, evidence, and next input |
+| `下一轮` | Offer at most two next modules after assessment |
+| `选1` / `选2` | Select and start a proposed module |
+| `暂停` | Save the current state and stop |
 
-Answer concept/design questions normally in your own words. After verified
-code, the AI supplies the reference reflection answer directly; the owner does
-not need to answer a final reflection question or send `继续`.
+After verified code, AI supplies the reflection answer and assessment directly.
+The owner does not answer a separate reflection questionnaire.
 
-## Visible implementation contract
+## Workflow states
 
-Before handing a human-owned function to the owner, show its concrete wiring
-contract. Do not expect the owner to infer parameter sources from a signature
-or reconstruct composition code from scattered tests.
-
-Always include:
-
-| Required item | What the mentor must show |
-| --- | --- |
-| Input parameters | name, type/data shape, one small example, and where the value comes from |
-| Input use | which existing component consumes each value |
-| Return value | exact shape and which caller consumes it |
-| Existing components | functions/classes to call, with file locations |
-| Ownership boundary | the few lines/decision the owner writes and what must not be reimplemented |
-| Data flow | one ordered line from inputs through existing components to output |
-
-For a composition function, explicitly distinguish injected dependencies from
-objects created inside the function. State whether a parameter is a real or
-fake implementation at runtime, and explain how the same function accepts
-both. If the owner asks how to handle an intermediate response that an existing
-loop already owns, point out that ownership before giving syntax help.
-
-## Workflow
-
-```mermaid
-stateDiagram-v2
-    [*] --> READY
-    READY --> CONCEPT: 开始本轮
-    CONCEPT --> IMPLEMENT: owner answers concept question
-    IMPLEMENT --> REVIEW: 我写完了
-    REVIEW --> REVIEW: 我改完了 / more work needed
-    REVIEW --> REFLECT: code and tests satisfy current contract
-    REFLECT --> DONE: AI provides reference reflection and scores
-    DONE --> CONCEPT: 选1 or 选2
-    DONE --> DONE: 下一轮 proposes options
+```text
+READY -> CONCEPT -> IMPLEMENT -> REVIEW -> REFLECT -> DONE
 ```
 
-### READY
+### READY / CONCEPT
 
-Read the project scope and learning journal. Select one concept, declare code ownership, explain the concept briefly, ask one question, and stop.
+Start with the relevant system map, not an isolated function. State:
 
-### CONCEPT
+1. the end-to-end capability being delivered;
+2. the primary system concept and up to two supporting concepts;
+3. component ownership and data flow;
+4. one acceptance input/output or execution trace;
+5. the architecture-level human-owned core;
+6. the surrounding AI-supported implementation;
+7. files and explicit scope limits.
 
-Treat the owner's normal reply as the concept answer. Give concise feedback.
-When the answer is sufficient for the current milestone, present the visible
-implementation contract above, create only the agreed fixture, signature, and
-failing test, update state to `IMPLEMENT`, and stop at the learning checkpoint.
+Ask a concept question only if the answer changes an architectural decision.
+Do not require the owner to explain obvious syntax, copy fixture keys, or pass a
+quiz before routine scaffolding can proceed.
 
 ### IMPLEMENT
 
-Wait for the owner to write the human-owned core. Respond to `提示 N` without
-advancing. If confusion comes from an unclear parameter or dependency, restate
-its source, shape, consumer, and existing implementation before escalating the
-hint level. Respond to `我写完了` by reading the attempt and running the
-smallest relevant test.
+AI may implement routine supporting work before the learning checkpoint:
+
+- fixtures and local metadata;
+- provider schemas and fake clients;
+- repetitive task validators;
+- mechanical adapter parameterization;
+- function signatures, docstrings, and deterministic tests;
+- non-core composition plumbing.
+
+Before handing off, provide the visible wiring contract:
+
+| Required item | Mentor responsibility |
+| --- | --- |
+| Input | name, concrete shape/example, producer, and consumer |
+| Output | exact shape and next consumer |
+| Existing components | functions/classes to reuse and what they already own |
+| Dependencies | which are injected; fake in tests versus real at runtime |
+| State ownership | what persists for one model call, Agent turn, session, or game step |
+| Data flow | one ordered end-to-end line |
+| Ownership | exact architecture decision or transition the owner writes |
+| Non-goals | capabilities deliberately excluded from the module |
+
+Stop only when the architecture-level human-owned core is ready to implement.
+Do not turn incidental Python mechanics into additional learning checkpoints.
 
 ### REVIEW
 
-Report one important issue at a time. Do not rewrite the owner-owned core. If
-changes are needed, wait for `我改完了`. When behavior and tests satisfy the
-current contract, enter `REFLECT` and provide the reference explanation of the
-Agent boundaries and what the test proves.
+On `我写完了` or `我改完了`:
 
-### REFLECT
+1. inspect the complete owner attempt before editing;
+2. run the smallest end-to-end deterministic test;
+3. report all currently visible blocking correctness issues together;
+4. separate architecture mistakes from mechanical Python mistakes;
+5. fix AI-owned plumbing directly when safe;
+6. preserve the user's architecture-level core unless full implementation is
+   explicitly requested;
+7. rerun focused and relevant regression tests.
 
-Do not wait for an owner reply. Give the correct reflection answer: inputs and
-outputs, legal/safety boundary, context or state transition, stop behavior,
-what each test proves, and at least one claim it does not prove. Score the
-milestone using evidence already observed during concept, implementation, and
-review; missing owner explanation remains an evidence limitation but does not
-block completion. Append the learning entry, set state to `DONE`, and offer no
-implementation work.
+Do not create repeated review turns for one field name or assertion direction
+when all such issues can be identified in one pass.
+
+### REFLECT / ASSESS
+
+Once the complete module passes:
+
+- show the successful end-to-end trace or context manifest;
+- explain component ownership, state transitions, safety boundaries, and stop
+  behavior;
+- state what deterministic and live evidence prove and do not prove;
+- identify deliberately deferred capabilities;
+- score the module once using the five journal dimensions;
+- append one permanent learning entry and move to `DONE`.
 
 ### DONE
 
-Wait for `下一轮`. Propose at most two exercises based on the recorded concept gap. Start the selected option when the owner sends `选1` or `选2`.
+Wait for `下一轮`. Offer no more than two module choices. Prefer the next
+vertical capability in `docs/learning-plan.md` over a small remediation exercise
+unless the current gap blocks safe progress.
 
-## Current starting command
+## Human ownership declaration
+
+Use this before implementation:
 
 ```text
-开始本轮
+Human-owned core: <one architecture contract, state transition, context policy, or evaluation rule>
+AI-supported work: <fixtures, schemas, adapters, routine code, tests, execution, and debugging>
+Learning checkpoint: <the exact architecture-level implementation handed to the owner>
 ```
+
+## Module sizing
+
+Default budget:
+
+- no more than five production files;
+- no more than three test files;
+- no more than 300 new non-test lines;
+- no new dependency unless the vertical capability cannot reasonably be built
+  without it.
+
+Split only when a module no longer has one understandable end-to-end outcome.
+Offline deterministic evidence and a live smoke run for that same outcome do
+not count as separate modules.
+
+## Current module
+
+Module 1 is the end-to-end route decision. Send `开始本轮` to begin with
+its system map and concrete `build_route_turn_contract` contract.
